@@ -1,7 +1,7 @@
 <launch>
 
   <arg name="use_arduino" default="true"/>
-  <arg name="control_topic" default="/control/control">
+  <arg name="control_topic" default="/control/control"/>
 
   <group ns="drivers">
     <group ns="arduino" if="$(eval use_arduino)">

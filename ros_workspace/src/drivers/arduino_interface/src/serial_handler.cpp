@@ -5,11 +5,13 @@ SerialHandler::SerialHandler(ros::NodeHandle &n) {
   n.param<std::string>("/control_topic", control_topic, "/control/control");
 
   sub_ = n.subscribe(control_topic, 1, &SerialHandler::controlsCallback, this);
+  initSerial();
 }
 
 SerialHandler::~SerialHandler() { serial_.close(); }
 
 void SerialHandler::initSerial() {
+  std::cout << "Initializing Serial" << std::endl;
   try {
     serial_.setPort("/dev/ttyACM0");
     serial_.setBaudrate(115200);
@@ -50,14 +52,14 @@ void SerialHandler::sendControls() {
   buffer[0] = size;
   serial_.flush();
   serial_.write(buffer, size);
-  // std::cout
-  //     << "Motor Sent :: "
-  //     << (int)(*(struct ControlMessage *)(buffer + sizeof(uint8_t))).throttle
-  //     << std::endl;
-  // std::cout
-  //     << "Steering Sent :: "
-  //     << (int)(*(struct ControlMessage *)(buffer + sizeof(uint8_t))).steering
-  //     << std::endl;
+  std::cout
+      << "Motor Sent :: "
+      << (int)(*(struct ControlMessage *)(buffer + sizeof(uint8_t))).throttle
+      << std::endl;
+  std::cout
+      << "Steering Sent :: "
+      << (int)(*(struct ControlMessage *)(buffer + sizeof(uint8_t))).steering
+      << std::endl;
 
   serial_.readline();
 }
@@ -69,7 +71,7 @@ void SerialHandler::controlsCallback(
   int8_t steering = msg->steering * 100;
 
   // Clamp controls
-  int max_throttle = 15;
+  int max_throttle = 18;
   throttle = throttle > max_throttle ? max_throttle : throttle;
   steering -= 5;
 

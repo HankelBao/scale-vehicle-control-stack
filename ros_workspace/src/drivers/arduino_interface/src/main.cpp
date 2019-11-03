@@ -6,9 +6,9 @@
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "arduino_interface");
-  ros::NodeHandle n;
+  ros::NodeHandle n("~");
 
   SerialHandler serialHandler(n);
 
-  return serialHandler.spin();
+  serialHandler.spin();
 }

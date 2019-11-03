@@ -1,22 +1,15 @@
 #include "arduino_interface/serial_handler.h"
 
-#include <chrono>
-#include <thread>
+SerialHandler::SerialHandler(ros::NodeHandle &n) {
+  std::string control_topic;
+  n.param<std::string>("/control_topic", control_topic, "/control/control");
 
-SerialHandler::SerialHandler(ros::NodeHandle &n)
-    : controls_sub_(n.subscribe("/control/control", 1,
-                                &SerialHandler::controlsCallback, this)) {
-  if (thread_.joinable())
-    thread_.join();
+  sub_ = n.subscribe(control_topic, 1, &SerialHandler::controlsCallback, this);
 }
 
-SerialHandler::~SerialHandler() {
-  serial_.close();
-  if (thread_.joinable())
-    thread_.join();
-}
+SerialHandler::~SerialHandler() { serial_.close(); }
 
-int SerialHandler::initSerial() {
+void SerialHandler::initSerial() {
   try {
     serial_.setPort("/dev/ttyACM0");
     serial_.setBaudrate(115200);
@@ -27,7 +20,7 @@ int SerialHandler::initSerial() {
     std::cout << "Serial Port Initialization Unsuccessful" << std::endl;
     serial_.close();
     ros::shutdown();
-    return -1;
+    return;
   }
 
   if (serial_.isOpen()) {
@@ -35,7 +28,7 @@ int SerialHandler::initSerial() {
   } else {
     serial_.close();
     ros::shutdown();
-    return -1;
+    return;
   }
 }
 
@@ -71,11 +64,6 @@ void SerialHandler::sendControls() {
 
 void SerialHandler::controlsCallback(
     const common_msgs::Control::ConstPtr &msg) {
-  auto start = std::chrono::high_resolution_clock::now();
-
-  // ros::Duration diff = ros::Time::now() - msg->header.stamp;
-  // ROS_INFO_STREAM("Diff :: " << diff);
-
   // Get controls
   int8_t throttle = msg->throttle * 100;
   int8_t steering = msg->steering * 100;
@@ -83,35 +71,14 @@ void SerialHandler::controlsCallback(
   // Clamp controls
   int max_throttle = 15;
   throttle = throttle > max_throttle ? max_throttle : throttle;
-  //  if (abs(steering * 1.5) < 100)
-  // steering *= 1.5;
   steering -= 5;
 
   message_ = ControlMessage{throttle, steering};
 
-  // if (thread_.joinable())
-    // thread_.join();
-
-  // std::thread thr([&] {
-    // mutex_.lock();
-    // sendControls();
-    // mutex_.unlock();
-  // });
-  // thread_ = std::move(thr);
-
   sendControls();
-  auto end = std::chrono::high_resolution_clock::now();
-
-  auto duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
-  ROS_DEBUG_STREAM("INTERFACE :: " << (duration.count() * 1e-3)
-                                  << " milliseconds");
 }
 
-int SerialHandler::spin() {
-  if (initSerial() == -1)
-    return -1;
+void SerialHandler::spin() {
   ros::Duration(2).sleep();
   establishConnection();
 
@@ -119,11 +86,10 @@ int SerialHandler::spin() {
     if (serial_.available()) {
       // serial_.flush();
       std::string msg = serial_.readline();
-      std::cout << "Data Received :: " << msg << std::endl;
+      // std::cout << "Data Received :: " << msg << std::endl;
     }
     ros::spinOnce();
   }
   message_ = ControlMessage{0, 0};
   sendControls();
-  return 0;
 }

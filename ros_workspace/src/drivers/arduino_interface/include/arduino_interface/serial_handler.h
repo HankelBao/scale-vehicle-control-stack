@@ -1,23 +1,17 @@
 // ROS include
-#include "ros/ros.h"
+#include <ros/ros.h>
 
 // Messages
-#include "common_msgs/Control.h"
+#include <common_msgs/Control.h>
 
 // External packages
-#include "serial/serial.h"
-
-#include <thread>
-#include <mutex>
+#include <serial/serial.h>
 
 class SerialHandler {
 private:
   serial::Serial serial_;
 
-  ros::Subscriber controls_sub_;
-
-  std::thread thread_;
-  std::mutex mutex_;
+  ros::Subscriber sub_;
 
   enum AckType : uint8_t { OK, NOT_OK };
 
@@ -33,10 +27,10 @@ public:
   SerialHandler(ros::NodeHandle &n);
   ~SerialHandler();
 
-  int spin();
+  void spin();
 
 private:
-  int initSerial();
+  void initSerial();
 
   void establishConnection();
 

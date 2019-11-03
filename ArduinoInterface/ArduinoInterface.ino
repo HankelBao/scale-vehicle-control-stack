@@ -23,7 +23,7 @@ void setup() {
   Serial.begin(BAUD_RATE);
   Serial.setTimeout(20);
 
-  motorController.Initialize(PWMController::MOTOR_REVERSE, MOTOR_PIN);
+  motorController.Initialize(PWMController::MOTOR_NORMAL, MOTOR_PIN);
   steeringController.Initialize(PWMController::STEERING_REVERSE, STEERING_PIN);
 
   serialHandler.establishConnection();

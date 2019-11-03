@@ -1,0 +1,12 @@
+<launch>
+  <!-- Control topic to publish to -->
+  <arg name="control_topic" default="/control/control"/>
+
+  <group ns="control">
+    <group ns="teleop">
+      <node pkg="keyboard_control" type="keyboard_control" name="keyboard_control" required="true" output="screen">
+	<param name="control_topic" value="$(arg control_topic)"/>	
+      </node>
+    </group>
+  </group>
+</launch>

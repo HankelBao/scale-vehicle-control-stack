@@ -1,0 +1,29 @@
+<launch>
+
+  <arg name="simulating" default="false"/>
+  <arg name="bag_file" default="false"/>
+  <arg name="use_arduino" default="true"/>
+  <arg name="keyboard" default="false"/>
+  <arg name="wheel" default="false"/>
+  <arg name="time_tester" default="false"/>
+  <arg name="pwm_tester" default="false"/>
+
+  <group ns="arduino" if="$(eval not simulating and use_arduino)">
+
+    <node pkg="arduino_interface" type="arduino_interface" name="arduino_interface" output="screen" required="true" respawn="false"/>
+
+    <group if="$(arg keyboard)">
+      <node pkg="keyboard_control" type="keyboard_control" name="keyboard_control" output="screen" respawn="false">
+        <remap from="/arduino/control" to="/control/control"/>
+      </node>
+    </group>
+  </group>
+
+  <group if="$(eval time_tester)">
+    <node pkg="arduino_interface" type="arduino_interface_time_tester" name="arduino_interface_time_tester" output="screen" required="true" respawn="false"/>
+  </group>
+
+  <group if="$(eval pwm_tester)">
+    <node pkg="arduino_interface" type="arduino_interface_pwm_tester" name="arduino_interface_pwm_tester" output="screen" required="true" respawn="false"/>
+  </group>
+</launch>

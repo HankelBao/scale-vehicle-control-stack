@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(py_centerline_follower)
+project(centerline_follower)
 
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
@@ -21,7 +21,6 @@ catkin_package(
 )
 
  install(PROGRAMS
-	 nodes/py_centerline_follower
+	 nodes/centerline_follower
 	 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 	 )
-

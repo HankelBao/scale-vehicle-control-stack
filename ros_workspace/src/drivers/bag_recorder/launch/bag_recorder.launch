@@ -1,0 +1,9 @@
+<launch>
+  <arg name="record_cam" default="false"/>
+  <arg name="record_pc" default="false"/>
+  <arg name="record_control" default="false"/>
+  
+  <node pkg="rosbag" type="record" name="rosbag_record_cam" if="$(arg record_cam)" args="record /sensor_data/raw_data/camera -o /home/sbel/rosbag_files/cam_thresholding"/>
+  <node pkg="rosbag" type="record" name="rosbag_record_pc" if="$(arg record_pc)" args="record /sensor_data/raw_data/point_cloud -o /home/sbel/rosbag_files/pc_thresholding"/>
+  <node pkg="rosbag" type="record" name="rosbag_record_control" if="$(arg record_control)" args="record /control/control -o /home/sbel/rosbag_files/control_thresholding"/>
+</launch>

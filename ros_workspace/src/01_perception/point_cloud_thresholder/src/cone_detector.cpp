@@ -7,7 +7,7 @@ PointCloudConeDetector::PointCloudConeDetector(ros::NodeHandle &n)
   std::string cloud_topic, cone_topic;
   n.param<std::string>("cloud_topic", cloud_topic,
                        "/zed/zed_node/point_cloud/cloud_registered");
-  n.param<std::string>("cone_topic", cone_topic, "cone_image_map");
+  n.param<std::string>("cone_topic", cone_topic, "/perception/cone_image_map");
   n.param("display", visualize_, false);
   n.param("simulating", image_simulated_, true);
 

@@ -6,8 +6,6 @@ from common_msgs.msg import Control
 from perception_msgs.msg import ConeDepthMap
 # import matplotlib.pyplot as plt
 
-pub = rospy.Publisher('/control/control', Control, queue_size=1)
-
 k_steer = -.1 # -.1
 k_throttle = 0.0 # 0.0
 target_distance = .25 #.25
@@ -187,7 +185,12 @@ def create_middle(left_path,right_path):
     return np.asarray(middle)
 
 def main():
-    rospy.init_node("py_centerline_follower")
+    rospy.init_node('centerline_follower')
+
+    control_topic = rospy.get_param('~control_topic', '/control/control')
+    pub = rospy.Publisher(control_topic, Control, queue_size=1)
+
+    cone_topic = rospy.get_param('~cone_topic', '/perception/cone_image_map')
     rospy.Subscriber('/perception/cone_image_map', ConeDepthMap, callback)
 
     rospy.spin()

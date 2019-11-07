@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package format="2">
-  <name>py_centerline_follower</name>
+  <name>centerline_follower</name>
   <version>0.0.0</version>
   <description>
-    circle_through_3_cones package
+    centerline_follower package
   </description>
 
   <license>TODO</license>

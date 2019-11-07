@@ -10,17 +10,14 @@
   <arg name="use_bag" default="false"/>
   <!-- Use arduino -->
   <arg name="use_arduino" default="true"/>
-  <group if="$(eval use_arduino and not use_bag)">
+  <group if="$(eval not use_bag and use_arduino)">
     <include file="$(find arduino_interface)/launch/arduino_interface.launch">
-      <arg name="simulating" value="$(arg simulating)"/>
-      <arg name="use_bag" value="$(arg use_bag)"/>
-      <arg name="use_arduino" value="$(arg use_arduino)"/>
+        <arg name="control_topic" value="$(arg control_topic)"/>
     </include>
   </group>
 
   <!-- Include thresholding launch file -->
   <include file="$(find point_cloud_thresholder)/launch/point_cloud_thresholder.launch">
-    <arg name="simulating" value="$(arg simulating)"/>
     <arg name="cone_topic" value="$(arg cone_topic)"/>
     <arg name="use_bag" value="$(arg use_bag)"/>
     <arg name="display" value="$(arg display)"/>

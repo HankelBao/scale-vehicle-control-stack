@@ -14,7 +14,10 @@ num_markers = 100 #100
 marker_delta = .1 #.1
 buffer_width = .5 #.5
 
-throttle = .12 # .11
+throttle = .18 # .11
+
+control_topic = rospy.get_param('~control_topic', '/control/control')
+pub = rospy.Publisher(control_topic, Control, queue_size=1)
 
 def callback(data):
     red = np.zeros((len(data.red_cones), 2))
@@ -186,9 +189,6 @@ def create_middle(left_path,right_path):
 
 def main():
     rospy.init_node('centerline_follower')
-
-    control_topic = rospy.get_param('~control_topic', '/control/control')
-    pub = rospy.Publisher(control_topic, Control, queue_size=1)
 
     cone_topic = rospy.get_param('~cone_topic', '/perception/cone_image_map')
     rospy.Subscriber('/perception/cone_image_map', ConeDepthMap, callback)

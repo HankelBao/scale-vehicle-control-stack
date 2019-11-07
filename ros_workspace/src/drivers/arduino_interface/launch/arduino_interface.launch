@@ -1,10 +1,9 @@
 <launch>
 
-  <arg name="use_arduino" default="true"/>
   <arg name="control_topic" default="/control/control"/>
 
   <group ns="drivers">
-    <group ns="arduino" if="$(eval use_arduino)">
+    <group ns="arduino">
       <node pkg="arduino_interface" type="arduino_interface" name="arduino_interface" output="screen" required="true" respawn="false">
         <param name="control_topic" value="$(arg control_topic)"/>
       </node>

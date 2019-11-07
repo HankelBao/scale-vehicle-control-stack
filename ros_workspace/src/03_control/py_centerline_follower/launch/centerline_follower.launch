@@ -1,0 +1,42 @@
+<launch>
+  <arg name="record_cam" default="false"/>
+  <arg name="record_pc" default="false"/>
+  <arg name="record_control" default="false"/>
+  <!-- Control topic to publish to -->
+  <arg name="control_topic" default="/control/control"/>
+  <param name="/control_topic" value="/control/control"/>
+  <!-- Cone topic to subscribe to -->
+  <arg name="cone_topic" default="/perception/cone_image_map"/>
+  <!-- Use simulated sensors -->
+  <arg name="simulating" default="true"/>
+  <!-- Display cone recognition -->
+  <arg name="display" default="false"/>
+  <!-- Use bag file -->
+  <arg name="bag_file" default="false"/>
+  <!-- Use arduino -->
+  <arg name="use_arduino" default="true"/>
+  <include file="$(find arduino_interface)/launch/arduino_interface.launch">
+    <arg name="simulating" value="$(arg simulating)"/>
+    <arg name="bag_file" value="$(arg bag_file)"/>
+    <arg name="use_arduino" value="$(arg use_arduino)"/>
+  </include>
+  <!-- Include thresholding launch file -->
+  <include file="$(find point_cloud_thresholder)/launch/point_cloud_thresholder.launch">
+    <arg name="simulating" value="$(arg simulating)"/>
+    <arg name="cone_topic" value="$(arg cone_topic)"/>
+    <arg name="bag_file" value="$(arg bag_file)"/>
+    <arg name="display" value="$(arg display)"/>
+  </include>
+  <group ns="control">
+    <group ns="flat_image">
+      <!-- Launch control node -->
+      <node pkg="py_centerline_follower" type="py_centerline_follower" name="py_centerline_follower" output="screen" required="true">
+        <param name="control_topic" value="$(arg control_topic)"/>
+        <param name="cone_topic" value="$(arg cone_topic)"/>
+      </node>
+    </group>
+  </group>
+  <node pkg="rosbag" type="record" name="rosbag_record_cam" if="$(arg record_cam)" args="record /sensor_data/raw_data/camera -o /home/sbel/rosbag_files/cam_thresholding"/>
+  <node pkg="rosbag" type="record" name="rosbag_record_pc" if="$(arg record_pc)" args="record /sensor_data/raw_data/point_cloud -o /home/sbel/rosbag_files/pc_thresholding"/>
+  <node pkg="rosbag" type="record" name="rosbag_record_control" if="$(arg record_control)" args="record /control/control -o /home/sbel/rosbag_files/control_thresholding"/>
+</launch>

@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+import rospy
+
+import numpy as np
+from common_msgs.msg import Control
+from perception_msgs.msg import ConeDepthMap
+# import matplotlib.pyplot as plt
+
+pub = rospy.Publisher('/control/control', Control, queue_size=1)
+
+k_steer = -.1 # -.1
+k_throttle = 0.0 # 0.0
+target_distance = .25 #.25
+
+num_markers = 100 #100
+marker_delta = .1 #.1
+buffer_width = .5 #.5
+
+throttle = .12 # .11
+
+def callback(data):
+    red = np.zeros((len(data.red_cones), 2))
+    green = np.zeros((len(data.green_cones), 2))
+
+    for i in range(green.shape[0]):
+        green[i,0] = data.green_cones[i].pos.x
+        green[i,1] = data.green_cones[i].pos.y
+    for i in range(red.shape[0]):
+        red[i,0] = data.red_cones[i].pos.x
+        red[i,1] = data.red_cones[i].pos.y
+
+    throttle, steering = create_path(red, green)
+    msg = Control(throttle=throttle, steering=steering, braking=0)
+    pub.publish(msg)
+
+def order_points(points,buffer):
+    ordered_points = []
+    ordered_points.append(np.array([0,buffer]))
+
+    o_id = 0
+
+    while(points.shape[0] > 0):
+        min_dist = np.linalg.norm(np.asarray(ordered_points)[o_id,:] - points[0])
+        min_id = 0
+        for i in range(points.shape[0]):
+            tmp_dist = np.linalg.norm(np.asarray(ordered_points)[o_id,:] - points[i])
+            if(tmp_dist < min_dist):
+                min_dist = tmp_dist
+                min_id = i
+        o_id += 1
+        ordered_points.append(points[min_id])
+        points = np.delete(points,min_id,axis=0)
+
+    return np.array(ordered_points)
+
+#parse set of points
+def create_path(left_cones,right_cones):
+    if left_cones.shape[0] == 0 and right_cones.shape[0] == 0:
+        return 0, 0
+
+    left_ordered = order_points(left_cones,buffer_width)
+    right_ordered = order_points(right_cones,-buffer_width)
+
+    left_markers = create_markers(left_ordered)
+    right_markers = create_markers(right_ordered)
+
+    center_markers = create_middle(left_markers,right_markers)
+
+    target = find_target(center_markers,target_distance)
+
+    cord_pt = target / 2
+    normal = np.array([cord_pt[1],-cord_pt[0]])
+    normal = normal / np.linalg.norm(normal)
+
+    radius = 10000
+    # steer = 0
+    if(abs(normal[0]) > .001):
+        radius = cord_pt[1] + normal[1] * (-cord_pt[0] / normal[0])
+
+    steer = k_steer * 1 / radius
+    t = throttle - abs(steer * k_throttle)
+    # print("Radius:",radius)
+    # print("Steering:",steer)
+    # print("Throttle:",throttle)
+    if steer > 1:
+        steer = 1
+    elif steer < -1:
+        steer = -1
+    return t, steer
+
+
+
+def find_target(path,distance):
+    x = -1
+    y = 0
+
+    dist = 0
+    dist_found = False
+    for j in range(0,path.shape[0]-1):
+        segment_dist = np.linalg.norm(path[j,:]-path[j+1,:])
+
+        if(dist+segment_dist >= distance and not dist_found):
+            #marker is in this segment
+            weight = (distance - dist) / segment_dist
+            x = weight*path[j+1,0] + (1-weight)*path[j,0]
+            y = weight*path[j+1,1] + (1-weight)*path[j,1]
+            dist_found = True
+
+        else:
+            dist = dist+segment_dist
+
+    return np.array([x,y])
+
+
+
+def create_markers(path):
+
+    # markers = np.zeros((num_markers,2))
+    markers = []
+    # right_markers = np.zeros((num_markers,2))
+
+    for i in range(num_markers):
+        x = 0
+        y = 0
+
+        marker_dist = i*marker_delta
+        # print("Marker",i)
+        dist = 0
+        dist_found = False
+        for j in range(0,path.shape[0]-1):
+            segment_dist = np.linalg.norm(path[j,:]-path[j+1,:])
+
+            if(dist+segment_dist >= marker_dist and not dist_found):
+                #marker is in this segment
+                weight = (marker_dist - dist) / segment_dist
+                x = weight*path[j+1,0] + (1-weight)*path[j,0]
+                y = weight*path[j+1,1] + (1-weight)*path[j,1]
+                dist_found = True
+                # print("Marker is on this segment.")
+                # break
+                # pass
+            else:
+                dist = dist+segment_dist
+
+        if(dist_found):
+            #place marker at next distance along the path
+            markers.append(np.array([x,y]))
+
+        else:
+            break
+
+    # print("Markers:",markers)
+    return np.asarray(markers)
+
+def create_middle(left_path,right_path):
+    middle = []
+
+    has_left_path = True
+    has_right_path = True
+    id = 0
+    while(has_left_path or has_right_path):
+        if(id >= left_path.shape[0]-1):
+            has_left_path = False
+        if(id >= right_path.shape[0]-1):
+            has_right_path = False
+
+        if(has_left_path and has_right_path):
+            middle.append((left_path[id,:] + right_path[id,:]) / 2)
+
+        elif(has_left_path):
+            normal = left_path[id,:] - left_path[id+1,:]
+            normal = np.array([normal[1], -normal[0]])
+            normal = normal / np.linalg.norm(normal)
+            middle.append(left_path[id,:] - buffer_width*normal)
+
+        elif(has_right_path):
+            normal = right_path[id,:] - right_path[id+1,:]
+            normal = np.array([normal[1], -normal[0]])
+            normal = normal / np.linalg.norm(normal)
+            middle.append(right_path[id,:] + buffer_width*normal)
+
+        else:
+            pass
+
+        id+=1
+
+    return np.asarray(middle)
+
+def main():
+    rospy.init_node("py_centerline_follower")
+    rospy.Subscriber('/perception/cone_image_map', ConeDepthMap, callback)
+
+    rospy.spin()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass

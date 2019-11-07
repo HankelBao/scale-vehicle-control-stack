@@ -28,7 +28,7 @@ private:
 
 Teleop::Teleop(ros::NodeHandle &n) : throttle_(0), steering_(0) {
   std::string control_topic;
-  n.param<std::string>("/control_topic", control_topic, "/control/control");
+  n.param<std::string>("control_topic", control_topic, "/control/control");
 
   pub = n.advertise<common_msgs::Control>(control_topic, 1);
 };

@@ -2,7 +2,7 @@
 
 SerialHandler::SerialHandler(ros::NodeHandle &n) {
   std::string control_topic;
-  n.param<std::string>("/control_topic", control_topic, "/control/control");
+  n.param<std::string>("control_topic", control_topic, "/control/control");
 
   sub_ = n.subscribe(control_topic, 1, &SerialHandler::controlsCallback, this);
   initSerial();

@@ -51,7 +51,6 @@ public:
   void Initialize(CONTROLLER_TYPE controller_type, uint8_t pin) {
     this->type = controller_type;
     TRIM_PW = 0;
-    attach(pin);
 
     switch (type) {
     case PWMController::STEERING_NORMAL:
@@ -80,6 +79,8 @@ public:
     current = NEUTRAL_PW;
     last = NEUTRAL_PW;
 
+    attach(pin, MIN_PW, MAX_PW);
+
     writeMicroseconds(NEUTRAL_PW);
   }
 
@@ -101,7 +102,7 @@ public:
     }
     int diff = temp - target;
     target += abs(diff) < DELTA_PW
-                  ? diff 
+                  ? diff
                   : diff > 0 ? DELTA_PW : -DELTA_PW;
 
     // Integrate dynamics, taking as many steps as required to reach the value

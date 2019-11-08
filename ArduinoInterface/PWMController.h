@@ -57,29 +57,31 @@ public:
       MAX_PW = STEERING_NORMAL_PW_LEFT;
       MIN_PW = STEERING_NORMAL_PW_RIGHT;
       NEUTRAL_PW = STEERING_NORMAL_PW_NEUTRAL + TRIM_PW;
+      attach(pin, MIN_PW, MAX_PW);
       break;
     case PWMController::STEERING_REVERSE:
       MIN_PW = STEERING_REVERSE_PW_LEFT;
       MAX_PW = STEERING_REVERSE_PW_RIGHT;
       NEUTRAL_PW = STEERING_REVERSE_PW_NEUTRAL + TRIM_PW;
+      attach(pin, MIN_PW, MAX_PW);
       break;
     case PWMController::MOTOR_NORMAL:
       MAX_PW = MOTOR_NORMAL_PW_THROTTLE;
       MIN_PW = MOTOR_NORMAL_PW_BRAKE;
       NEUTRAL_PW = MOTOR_NORMAL_PW_NEUTRAL - TRIM_PW;
+      attach(pin, NEUTRAL_PW, MAX_PW);
       break;
     case PWMController::MOTOR_REVERSE:
       MIN_PW = MOTOR_REVERSE_PW_THROTTLE;
       MAX_PW = MOTOR_REVERSE_PW_BRAKE;
       NEUTRAL_PW = MOTOR_REVERSE_PW_NEUTRAL - TRIM_PW;
+      attach(pin, NEUTRAL_PW, MAX_PW);
       break;
     }
 
     target = NEUTRAL_PW;
     current = NEUTRAL_PW;
     last = NEUTRAL_PW;
-
-    attach(pin, MIN_PW, MAX_PW);
 
     writeMicroseconds(NEUTRAL_PW);
   }

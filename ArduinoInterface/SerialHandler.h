@@ -1,41 +1,57 @@
-#pragma once
+ #pragma once
 
-#include <HardwareSerial.h>
+ enum CommandType : int {
+   DIRECTION, THROTTLE
+ };
 
-class SerialHandler {
-private:
-  // Public class variables
-  struct ControlMessage {
-    int8_t throttle;
-    int8_t steering;
-    uint8_t padding = 0;
-  } message_;
+ struct Command {
+  CommandType type;
+  int value;
+ };
 
-public:
-  // Public methods
-  SerialHandler() {}
-
-  void Advance() {
-    while (Serial.available() > 0) {
-      // read the incoming byte:
-      uint8_t sizeBuffer[sizeof(uint8_t)];
-      Serial.readBytes(sizeBuffer, sizeof(uint8_t));
-      uint8_t size = ((uint8_t *)sizeBuffer)[0];
-      uint8_t messageBuffer[size];
-      Serial.readBytes(messageBuffer, size);
-      message_ = *((struct ControlMessage *)messageBuffer);
-      Serial.println();
-    }
+ class SerialHandler {
+ public:
+  Command command;
+  
+  SerialHandler(int baud_rate, int timeout) {
+    BAUD_RATE = baud_rate;
+    TIMEOUT = timeout;
+    commandString = "";
   }
 
   void establishConnection() {
-    while (Serial.available() <= 0) {
-      Serial.println();
-      delay(300);
-    }
+    Serial.begin(BAUD_RATE);
+    Serial.setTimeout(TIMEOUT);
   }
 
-  int8_t GetThrottle() { return message_.throttle; }
+  boolean getCommand() {
+    if (Serial.available() > 0) {
+      int inChar = Serial.read();
+      switch (inChar) {
+      case 'D':
+        command.type = CommandType::DIRECTION;
+        break;
+      case 'T':
+        command.type = CommandType::THROTTLE;
+        break;
+      }
+      if (isDigit(inChar) || inChar == '-') {
+        commandString += (char)inChar;
+      }
+      
+      if (inChar == '\n') {
+        command.value = commandString.toInt();
+        
+        commandString = "";
+        return true;
+      }
+    }
+    return false;
+  }
 
-  int8_t GetSteering() { return message_.steering; }
-};
+ private:
+  String commandString;
+  int BAUD_RATE;
+  int TIMEOUT;
+ };
+
